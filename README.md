@@ -28,3 +28,55 @@ BUT do not allow users to access Cash Cards they do not own.
 <p>All application code and tests are updated to support the new <code>owner</code> field. No functionality has changed as a result of these updates.</p>
 <p>Let&#39;s take some time now to familiarize yourself with these updates.</p>
 
+<h1 class="title">3: Add the Spring Security Dependency</h1><div class="rendered-content"><p>We can add support for Spring Security by adding the appropriate dependency.</p>
+<ol>
+<li><p>Add the dependency.</p>
+<p>Add the following to the <code>build.gradle</code> file in the <code>dependencies {}</code> section:</p>
+<pre><code class="hljs language-groovy">dependencies {
+    implementation &#x27;org.springframework.boot:spring-boot-starter-web&#x27;
+
+    // Add the following dependency
+    implementation &#x27;org.springframework.boot:spring-boot-starter-security&#x27;
+    ...
+</code></pre>
+</li>
+<li><p>Run the tests.</p>
+<p>We&#39;ve added Spring Security capabilities to our application, but changed no code.</p>
+<p>So what do we expect to happen when we run the tests?</p>
+<p>Note that we will always run <code>./gradlew test</code> to run the tests.</p>
+<pre><code>[~/exercises] $ ./gradlew test
+...
+CashCardApplicationTests &gt; shouldReturnASortedPageOfCashCards() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnACashCardWhenDataIsSaved() FAILED
+...
+CashCardApplicationTests &gt; shouldCreateANewCashCard() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnAPageOfCashCards() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnAllCashCardsWhenListIsRequested() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnASortedPageOfCashCardsWithNoParametersAndUseDefaultValues() FAILED
+...
+CashCardApplicationTests &gt; shouldNotReturnACashCardWithAnUnknownId() FAILED
+11 tests completed, 7 failed
+&gt; Task :test FAILED
+</code></pre>
+<p>Things are really broken!</p>
+<p>Every test method within <code>CashCardApplicationTests</code> failed.</p>
+<p>Many failures are similar the the one below:</p>
+<pre><code class="hljs language-bash">expected: &lt;SOME NUMBER&gt;
+ but was: 0
+</code></pre>
+<p>In most cases, our tests expect <code>CashCard</code> data to be returned from our API, but nothing was returned.</p>
+<p>Why do you think all tests of our Cash Card API are failing after adding the Spring Security dependency?</p>
+</li>
+<li><p>Understand why everything is broken.</p>
+<p>So what happened?</p>
+<p>When we added the Spring Security dependency to our application, <em>security was enabled by default.</em></p>
+<p>Since we have not specified how authentication and authorization are performed within our Cash Card API, Spring Security has completely locked down our API.</p>
+<p>Better safe than sorry, right?</p>
+</li>
+</ol>
+<p>Next, let&#39;s configure Spring Security for our application.</p>
+
