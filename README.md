@@ -149,3 +149,47 @@ public class SecurityConfig {
 </li>
 </ol>
 </div>
+
+
+
+
+
+
+<h1 class="title">5: Configure Basic Authentication</h1><div class="rendered-content"><p>Thus far we have bootstrapped Spring Security, but not actually secured our application.</p>
+<p>Now let&#39;s secure our application by configuring <strong>basic authentication</strong>.</p>
+<ol>
+<li><p>Configure basic authentication.</p>
+<p>Update <code>SecurityConfig.filterChain</code> with the following to enable basic authentication:</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Bean</span>
+<span class="hljs-keyword">public</span> SecurityFilterChain <span class="hljs-title function_">filterChain</span><span class="hljs-params">(HttpSecurity http)</span> <span class="hljs-keyword">throws</span> Exception {
+  http.authorizeHttpRequests()
+    .requestMatchers(<span class="hljs-string">&quot;/cashcards/**&quot;</span>)
+    .authenticated()
+    .and()
+    .csrf().disable()
+    .httpBasic();
+  <span class="hljs-keyword">return</span> http.build();
+}
+</code></pre>
+</li>
+<li><p>Understand the Spring Security configuration.</p>
+<p>That&#39;s a lot of method calls!</p>
+<p>Here if we explain Spring Security&#39;s builder pattern in more understandable language, we see:</p>
+<blockquote>
+<p>All HTTP requests to <code>cashcards/</code> endpoints are required to be authenticated using HTTP Basic Authentication security (username and password).</p>
+<p>Also, do not require CSRF security.</p>
+</blockquote>
+<p><strong>Note:</strong> We&#39;ll talk about CSRF security later in this lab.</p>
+</li>
+<li><p>Run the tests.</p>
+<p>What will happen when we run our tests?</p>
+<p>When you run the tests, you&#39;ll notice that most tests fail with a <code>401 UNAUTHORIZED</code> HTTP status code, such as the following:</p>
+<pre><code class="hljs language-shell">expected: 200 OK
+  but was: 401 UNAUTHORIZED
+</code></pre>
+<p>Though it might not look like it, <em>this is progress!</em></p>
+<p>We&#39;ve enabled basic authentication requiring that requests must supply a username and password.</p>
+</li>
+</ol>
+<p>Our tests do not provide a username and password with our HTTP requests. So let&#39;s do that next.</p>
+</div>
