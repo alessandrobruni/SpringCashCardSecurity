@@ -81,8 +81,7 @@ CashCardApplicationTests &gt; shouldNotReturnACashCardWithAnUnknownId() FAILED
 <p>Next, let&#39;s configure Spring Security for our application.</p>
 
 
-
-<div class="rendered-content"><p>Next, we&#39;ll focus on getting our tests passing again by providing the minimum configuration needed by Spring Security.</p>
+<h1 class="title">4: Satisfy Spring Security's Dependencies</h1><div class="rendered-content"><p>Next, we&#39;ll focus on getting our tests passing again by providing the minimum configuration needed by Spring Security.</p>
 <p>We&#39;ve provided another file on our behalf: <code>example/cashcard/SecurityConfig.java</code>. This will be the Java Bean where we&#39;ll configure Spring Security for our application.</p>
 <ol>
 <li><p>Uncomment <code>SecurityConfig.java</code> and review.</p>
