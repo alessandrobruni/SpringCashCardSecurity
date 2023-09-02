@@ -94,11 +94,11 @@ CashCardApplicationTests &gt; shouldNotReturnACashCardWithAnUnknownId() FAILED
 <p>Uncomment all commented lines within <code>SecurityConfig</code>.</p>
 <pre><code class="hljs language-java"><span class="hljs-keyword">package</span> example.cashcard;
 ...
+public class SecurityConfig {
 
-<span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SecurityConfig</span> {
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.build();
 
-    <span class="hljs-keyword">public</span> SecurityFilterChain <span class="hljs-title function_">filterChain</span><span class="hljs-params">(HttpSecurity http)</span> <span class="hljs-keyword">throws</span> Exception {
-        <span class="hljs-keyword">return</span> http.build();
 ...
 </code></pre>
 <p><code>filterChain</code> returns <code>http.build()</code>, which is the minimum needed for now.</p>
