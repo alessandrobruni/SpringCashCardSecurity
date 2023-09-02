@@ -111,10 +111,13 @@ public class SecurityConfig {
 <span class="hljs-meta">@Configuration</span>
 <span class="hljs-keyword">public</span> <span class="hljs-keyword">class</span> <span class="hljs-title class_">SecurityConfig</span> {
 
-    <span class="hljs-comment">// Add this Annotation</span>
-    <span class="hljs-meta">@Bean</span>
-    <span class="hljs-keyword">public</span> SecurityFilterChain <span class="hljs-title function_">filterChain</span><span class="hljs-params">(HttpSecurity http)</span> <span class="hljs-keyword">throws</span> Exception {
-        <span class="hljs-keyword">return</span> http.build();
+@Configuration
+public class SecurityConfig {
+
+    // Add this Annotation
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http.build();
     }
 ...
 </code></pre>
