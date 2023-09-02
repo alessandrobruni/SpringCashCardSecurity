@@ -1,5 +1,5 @@
 # SpringCashCardSecurity
-1: Understand our Security Requirements
+# 1: Understand our Security Requirements
 Who should be allowed to manage any given Cash Card?
 
 In our simple domain, let's state that the user who created the Cash Card "owns" the Cash Card. Thus, they are the "card owner". Only the card owner can view or update a Cash Card.
