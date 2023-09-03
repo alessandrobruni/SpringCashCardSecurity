@@ -50,6 +50,27 @@ class CashCardApplicationTests {
     }
 
 
+    @Test
+    @DirtiesContext
+    void shouldCreateANewCashCard() {
+        CashCard newCashCard = new CashCard(null, 250.00, CC_Properties.USER_SARA);
+        ResponseEntity<Void> createResponse = restTemplate
+                .withBasicAuth(CC_Properties.USER_SARA,"abc123")
+                .postForEntity(CC_Properties.ROOT_URI, newCashCard, Void.class);
+        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+
+//        URI locationOfNewCashCard = createResponse.getHeaders().getLocation();
+//        ResponseEntity<String> getResponse = restTemplate.getForEntity(locationOfNewCashCard, String.class);
+//        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
+//
+//        DocumentContext documentContext = JsonPath.parse(getResponse.getBody());
+//        Number id = documentContext.read("$.id");
+//        Double amount = documentContext.read("$.amount");
+//
+//        assertThat(id).isNotNull();
+//        assertThat(amount).isEqualTo(250.00);
+    }
+
 //    @Test
 //    void shouldReturnACashCardWhenDataIsSaved() {
 //        ResponseEntity<String> response = restTemplate.getForEntity(CC_Properties.ROOT_URI+"/99", String.class);
@@ -71,24 +92,7 @@ class CashCardApplicationTests {
 //        assertThat(response.getBody()).isBlank();
 //    }
 //
-//    @Test
-//    @DirtiesContext
-//    void shouldCreateANewCashCard() {
-//        CashCard newCashCard = new CashCard(null, 250.00, "sarah1");
-//        ResponseEntity<Void> createResponse = restTemplate.postForEntity("/cashcards", newCashCard, Void.class);
-//        assertThat(createResponse.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-//
-//        URI locationOfNewCashCard = createResponse.getHeaders().getLocation();
-//        ResponseEntity<String> getResponse = restTemplate.getForEntity(locationOfNewCashCard, String.class);
-//        assertThat(getResponse.getStatusCode()).isEqualTo(HttpStatus.OK);
-//
-//        DocumentContext documentContext = JsonPath.parse(getResponse.getBody());
-//        Number id = documentContext.read("$.id");
-//        Double amount = documentContext.read("$.amount");
-//
-//        assertThat(id).isNotNull();
-//        assertThat(amount).isEqualTo(250.00);
-//    }
+
 //
     @Test
     void shouldReturnAllCashCardsWhenListIsRequested() {
