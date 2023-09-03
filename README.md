@@ -349,3 +349,87 @@ CashCardApplicationTests &gt; shouldNotReturnACashCardWhenUsingBadCredentials() 
 </ol>
 <p>We&#39;ve now successfully enabled RBAC-based authorization!</p>
 </div>
+
+
+
+
+
+
+
+<!DOCTYPE html><html><head><link rel="stylesheet" href="/workshop/static/bootstrap/css/bootstrap.css"><link rel="stylesheet" href="/workshop/static/fontawesome/css/all.min.css"><link rel="stylesheet" href="/workshop/static/highlight.js/styles/default.css"><link rel="stylesheet" href="/workshop/static/styles/educates.css"><link rel="stylesheet" href="/workshop/static/styles/educates-markdown.css"><link rel="stylesheet" href="/workshop/static/theme/workshop-instructions.css"><link rel="shortcut icon" href="/workshop/static/images/favicon.ico"></head><body data-google-tracking-id="" data-clarity-tracking-id="" data-amplitude-tracking-id="" data-workshop-name="course-spring-brasb-6yqkph" data-session-namespace="spring-academy-w07-s897" data-workshop-namespace="spring-academy-w07" data-training-portal="spring-academy" data-ingress-domain="acad-spr-prd3.labs.spring.academy" data-ingress-protocol="https" data-ingress-port-suffix="" data-prev-page="07-authorization" data-current-page="08-ownership-repo" data-next-page="09-ownership-controller" data-page-format="markdown" data-page-step="8" data-pages-total="12"><div class="header page-navbar sticky-top bg-primary"><div class="row row-no-gutters"><div class="col-sm-12"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" type="button" data-goto-page="/" aria-label="Home"><span class="fas fa-home fa-inverse" aria-hidden="true"></span></button></div><div class="btn-toolbar float-right" role="toolbar"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" id="header-prev-page" type="button" data-goto-page="07-authorization" disabled="" aria-label="Prev"><span class="fas fa-arrow-left fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-goto-toc" type="button" aria-label="TOC" data-toggle="modal" data-target="#table-of-contents"><span class="fas fa-list fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-next-page" type="button" data-goto-page="09-ownership-controller" disabled="" aria-label="Next"><span class="fas fa-arrow-right fa-inverse" aria-hidden="true"></span></button></div></div></div></div></div><div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">8: Cash Card ownership: Repository Updates</h1><div class="rendered-content"><p>As mentioned in the previous exercise, we have a glaring security hole in our application.</p>
+<p>Any authenticated user with role <code>CARD-OWNER</code> can view anyone else&#39;s Family Cash Cards!</p>
+<p>To fix this, we will update our tests, <code>CashCardRepository</code>, and <code>CashCardController</code>:</p>
+<ul>
+<li>We&#39;ll add functionality to <code>CashCardRepository</code> to restrict or &quot;scope&quot; queries to the correct <code>OWNER</code>.</li>
+<li>Next, we&#39;ll update our <code>CashCardController</code> to guarantee that only the correct <code>OWNER</code> is used.</li>
+</ul>
+<h3 id="learning-moment-best-practices">Learning Moment: Best Practices</h3>
+<p>Wait! Isn&#39;t this lab all about the Spring Security project and its amazing technology? Can&#39;t Spring Security do all of this ownership validation so we don&#39;t have to modify our Repositories and Controllers?</p>
+<p>Answer: This lab and associated lesson are about securing an HTTP API. Yes, security technologies such as Spring Security are amazing. Yes, there are features such as <em>Spring Security Method Security</em> that might help in this situation, but it is still <em>your responsibility as a developer</em> to write secure code and follow best security practices. For example, don&#39;t write code that allows users to access other users&#39; data!</p>
+<p>Now, let&#39;s update our tests and <code>CashCardRepository</code>.</p>
+<ol>
+<li><p>Add a new <code>CashCard</code> for a user named <code>kumar2</code>.</p>
+<p>Update <code>src/test/resources/data.sql</code> with a <code>CashCard</code> record owned by a different user:</p>
+<pre><code class="hljs language-sql">...
+<span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> CASH_CARD(ID, AMOUNT, OWNER) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">102</span>, <span class="hljs-number">200.00</span>, <span class="hljs-string">&#x27;kumar2&#x27;</span>);
+</code></pre>
+</li>
+<li><p>Test that users cannot access each other&#39;s data.</p>
+<p>Let&#39;s add a test that explicitly asserts that our API returns a <code>404 NOT FOUND</code> when a user attempts to access a Cash Card they do not own.</p>
+<p><strong><em>Note:</em></strong> You might wonder why we want to return a <code>404 NOT FOUND</code> response instead of something else, like <code>401 UNAUTHORIZED</code>. One argument in favor of choosing to return <code>NOT FOUND</code> is that it&#39;s the same response that we&#39;d return if the requested Cash Card doesn&#39;t exist. It&#39;s safer to err on the side of not revealing <strong>any</strong> information about data which is not authorized for the user.</p>
+<p>Now we&#39;ll have <code>sarah1</code> attempt to access <code>kumar2</code>&#39;s data.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Test</span>
+<span class="hljs-keyword">void</span> <span class="hljs-title function_">shouldNotAllowAccessToCashCardsTheyDoNotOwn</span><span class="hljs-params">()</span> {
+    ResponseEntity&lt;String&gt; response = restTemplate
+      .withBasicAuth(<span class="hljs-string">&quot;sarah1&quot;</span>, <span class="hljs-string">&quot;abc123&quot;</span>)
+      .getForEntity(<span class="hljs-string">&quot;/cashcards/102&quot;</span>, String.class); <span class="hljs-comment">// kumar2&#x27;s data</span>
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
+}
+</code></pre>
+</li>
+<li><p>Run the tests.</p>
+<p>What do you think will happen when we run the tests? Let&#39;s find out.</p>
+<p>As expected, our new test fails, along with many others.</p>
+<pre><code class="hljs language-shell">CashCardApplicationTests &gt; shouldNotAllowAccessToCashCardsTheyDoNotOwn() FAILED
+ org.opentest4j.AssertionFailedError:
+ expected: 404 NOT_FOUND
+  but was: 200 OK
+</code></pre>
+<p>What&#39;s going on here?</p>
+<p>Answer: Currently, user <code>sarah1</code> is able to view <code>kumar2</code>&#39;s data because:</p>
+<ul>
+<li><code>sarah1</code> is <em>authenticated</em>.</li>
+<li><code>sarah1</code> is an <em>authorized</em> <code>CARD-OWNER</code>.</li>
+</ul>
+<p>In addition, our test for fetching a list of CashCards is also failing:</p>
+<pre><code class="hljs language-shell">CashCardApplicationTests &gt; shouldReturnAllCashCardsWhenListIsRequested() FAILED
+ org.opentest4j.AssertionFailedError:
+ expected: 3
+  but was: 4
+</code></pre>
+<p>Why are we returning too many Cash Cards? For the same reason as above: <code>sarah1</code> has access to <code>kumar2</code>&#39;s data. <code>kumar2</code>&#39;s Cash Card is being returned to <code>sarah1</code>&#39;s list of Cash Cards.</p>
+<p>Let&#39;s prevent users from accessing each other&#39;s data.</p>
+</li>
+<li><p>Update the <code>CashCardRepository</code> with a new <code>findById</code> methods.</p>
+<p>The simplest thing we can do is to always filter our data access by <code>CashCard</code> <code>owner</code>.</p>
+<p>Let&#39;s do that in our Repository.</p>
+<p>We will need to filter by <code>owner</code> when finding both a single <code>CashCard</code> or a list of <code>CashCards</code>.</p>
+<p>Edit <code>CashCardRepository</code> to add a new finder methods.</p>
+<p>Be sure to include the new imports for <code>Page</code> and <code>PageRequest</code>.</p>
+<pre><code class="hljs language-java">...
+<span class="hljs-keyword">import</span> org.springframework.data.domain.Page;
+<span class="hljs-keyword">import</span> org.springframework.data.domain.PageRequest;
+...
+
+<span class="hljs-keyword">public</span> <span class="hljs-keyword">interface</span> <span class="hljs-title class_">CashCardRepository</span> <span class="hljs-keyword">extends</span> <span class="hljs-title class_">CrudRepository</span>&lt;CashCard, Long&gt;, PagingAndSortingRepository&lt;CashCard, Long&gt; {
+   CashCard <span class="hljs-title function_">findByIdAndOwner</span><span class="hljs-params">(Long id, String owner)</span>;
+   Page&lt;CashCard&gt; <span class="hljs-title function_">findByOwner</span><span class="hljs-params">(String owner, PageRequest amount)</span>;
+}
+</code></pre>
+<p>As mentioned in the Spring Data labs and lessons, Spring Data will take care of the actual implementations (writing the SQL queries) for us.</p>
+<p><strong><em>Note:</em></strong> You might wonder whether Spring Data allows you to write your own SQL. After all, Spring Data can&#39;t anticipate every need, right? The answer is Yes! It&#39;s easy for you to write your own SQL code. The <a href="https://docs.spring.io/spring-data/jdbc/docs/current/reference/html/#jdbc.query-methods">Spring Data Query Methods</a> documentation describes how to do so by using the <code>@Query</code> annotation.</p>
+<p>Spring Data is perfectly capable of generating the SQL for the queries we need, though. Thanks, Spring Data!</p>
+</li>
+</ol>
+<p>Next, let&#39;s update the Controller.</p>
+</divbody></html>
