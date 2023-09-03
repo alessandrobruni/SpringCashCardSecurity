@@ -485,4 +485,25 @@ CashCardApplicationTests &gt; shouldReturnASortedPageOfCashCardsWithNoParameters
 </code></pre>
 </li>
 </ol>
-</div
+</div>
+
+
+
+
+
+
+<!DOCTYPE html><html><head><link rel="stylesheet" href="/workshop/static/bootstrap/css/bootstrap.css"><link rel="stylesheet" href="/workshop/static/fontawesome/css/all.min.css"><link rel="stylesheet" href="/workshop/static/highlight.js/styles/default.css"><link rel="stylesheet" href="/workshop/static/styles/educates.css"><link rel="stylesheet" href="/workshop/static/styles/educates-markdown.css"><link rel="stylesheet" href="/workshop/static/theme/workshop-instructions.css"><link rel="shortcut icon" href="/workshop/static/images/favicon.ico"></head><body data-google-tracking-id="" data-clarity-tracking-id="" data-amplitude-tracking-id="" data-workshop-name="course-spring-brasb-6yqkph" data-session-namespace="spring-academy-w07-s897" data-workshop-namespace="spring-academy-w07" data-training-portal="spring-academy" data-ingress-domain="acad-spr-prd3.labs.spring.academy" data-ingress-protocol="https" data-ingress-port-suffix="" data-prev-page="10-ownership-create" data-current-page="11-csrf" data-next-page="12-summary" data-page-format="markdown" data-page-step="11" data-pages-total="12"><div class="header page-navbar sticky-top bg-primary"><div class="row row-no-gutters"><div class="col-sm-12"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" type="button" data-goto-page="/" aria-label="Home"><span class="fas fa-home fa-inverse" aria-hidden="true"></span></button></div><div class="btn-toolbar float-right" role="toolbar"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" id="header-prev-page" type="button" data-goto-page="10-ownership-create" disabled="" aria-label="Prev"><span class="fas fa-arrow-left fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-goto-toc" type="button" aria-label="TOC" data-toggle="modal" data-target="#table-of-contents"><span class="fas fa-list fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-next-page" type="button" data-goto-page="12-summary" disabled="" aria-label="Next"><span class="fas fa-arrow-right fa-inverse" aria-hidden="true"></span></button></div></div></div></div></div><div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">11: About CSRF</h1><div class="rendered-content"><p>As we learned in the accompanying lesson, protection against Cross-Site Request Forgery (CSRF, or &quot;sea-surf&quot;) is an important aspect of HTTP-based APIs used by web-based applications.</p>
+<p>Yet, we&#39;ve disabled CSRF via the <code>.csrf().disable()</code> line in <code>SecurityConfig.filterChain</code>.</p>
+<p>Why have we disabled CSRF?</p>
+<p>For the purposes of our Family Cash Card API, we&#39;re going to follow the guidance from the Spring Security team <a href="https://docs.spring.io/spring-security/site/docs/5.0.x/reference/html/csrf.html#when-to-use-csrf-protection">regarding non-browser clients</a>:</p>
+<blockquote>
+<p>When should you use CSRF protection? Our recommendation is to use CSRF protection for any request that could be processed by a browser by normal users. If you are only creating a service that is used by non-browser clients, you will likely want to disable CSRF protection.</p>
+</blockquote>
+<p>If you would like to add CSRF security to our application, please review the testing support options below.</p>
+<ul>
+<li><a href="https://docs.spring.io/spring-security/reference/servlet/test/mockmvc/csrf.html">MockMVC CSRF testing examples</a></li>
+<li><a href="https://docs.spring.io/spring-security/site/docs/5.2.0.RELEASE/reference/html/test-webflux.html#csrf-support">WebTestClient CSRF testing examples</a>.</li>
+<li>A description of the <a href="https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html#double-submit-cookie">Double-Submit Cookie Pattern</a>.</li>
+<li>The Cash Card codebase, with CSRF protection enabled and implementing tests using the Double-Submit Cookie pattern: <a href="https://github.com/vmware-tanzu-learning/course-spring-brasb-build-a-rest-api-code/blob/simple-security-csrf-testing/src/test/java/example/cashcard/CashCardApplicationTests.java">TestRestReplate CSRF testing examples</a>.</li>
+</ul>
+</div>
