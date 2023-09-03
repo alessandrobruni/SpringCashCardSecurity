@@ -433,3 +433,56 @@ CashCardApplicationTests &gt; shouldNotReturnACashCardWhenUsingBadCredentials() 
 </ol>
 <p>Next, let&#39;s update the Controller.</p>
 </divbody></html>
+
+
+
+
+
+<!DOCTYPE html><html><head><link rel="stylesheet" href="/workshop/static/bootstrap/css/bootstrap.css"><link rel="stylesheet" href="/workshop/static/fontawesome/css/all.min.css"><link rel="stylesheet" href="/workshop/static/highlight.js/styles/default.css"><link rel="stylesheet" href="/workshop/static/styles/educates.css"><link rel="stylesheet" href="/workshop/static/styles/educates-markdown.css"><link rel="stylesheet" href="/workshop/static/theme/workshop-instructions.css"><link rel="shortcut icon" href="/workshop/static/images/favicon.ico"></head><body data-google-tracking-id="" data-clarity-tracking-id="" data-amplitude-tracking-id="" data-workshop-name="course-spring-brasb-6yqkph" data-session-namespace="spring-academy-w07-s897" data-workshop-namespace="spring-academy-w07" data-training-portal="spring-academy" data-ingress-domain="acad-spr-prd3.labs.spring.academy" data-ingress-protocol="https" data-ingress-port-suffix="" data-prev-page="08-ownership-repo" data-current-page="09-ownership-controller" data-next-page="10-ownership-create" data-page-format="markdown" data-page-step="9" data-pages-total="12"><div class="header page-navbar sticky-top bg-primary"><div class="row row-no-gutters"><div class="col-sm-12"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" type="button" data-goto-page="/" aria-label="Home"><span class="fas fa-home fa-inverse" aria-hidden="true"></span></button></div><div class="btn-toolbar float-right" role="toolbar"><div class="btn-group btn-group-sm" role="group"><button class="btn btn-transparent" id="header-prev-page" type="button" data-goto-page="08-ownership-repo" disabled="" aria-label="Prev"><span class="fas fa-arrow-left fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-goto-toc" type="button" aria-label="TOC" data-toggle="modal" data-target="#table-of-contents"><span class="fas fa-list fa-inverse" aria-hidden="true"></span></button><button class="btn btn-transparent" id="header-next-page" type="button" data-goto-page="10-ownership-create" disabled="" aria-label="Next"><span class="fas fa-arrow-right fa-inverse" aria-hidden="true"></span></button></div></div></div></div></div><div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">9: Cash Card ownership: Controller Updates</h1><div class="rendered-content"><p>The <code>CashCardRepository</code> now supports filtering <code>CashCard</code> data by <code>owner</code>.</p>
+<p>But we&#39;re not using this new functionality. Let&#39;s make those updates to the <code>CashCardController</code> now by introducing a concept we explained in the written lesson: the <code>Principal</code>.</p>
+<p>As with other helpful objects, the <code>Principal</code> is available for us to use in our Controller. The <code>Principal</code> holds our user&#39;s authenticated, authorized information.</p>
+<ol>
+<li><p>Update the Controller&#39;s <code>GET</code> by ID endpoint.</p>
+<p>Update the <code>CashCardController</code> to pass the Principal&#39;s information to our Repository&#39;s new <code>findByIdAndOwner</code> method.</p>
+<p>Be sure to add the new <code>import</code> statement.</p>
+<pre><code class="hljs language-java"><span class="hljs-keyword">import</span> java.security.Principal;
+...
+
+<span class="hljs-meta">@GetMapping(&quot;/{requestedId}&quot;)</span>
+<span class="hljs-keyword">public</span> ResponseEntity&lt;CashCard&gt; <span class="hljs-title function_">findById</span><span class="hljs-params">(<span class="hljs-meta">@PathVariable</span> Long requestedId, Principal principal)</span> {
+    Optional&lt;CashCard&gt; cashCardOptional = Optional.ofNullable(cashCardRepository.findByIdAndOwner(requestedId, principal.getName()));
+    <span class="hljs-keyword">if</span> (cashCardOptional.isPresent()) {
+     ...
+</code></pre>
+<p>Note that <code>Principal.name()</code> will return the username provided from Basic Auth.</p>
+</li>
+<li><p>Run the tests.</p>
+<p>The <code>GET</code> is passing, but our tests for Cash Card lists are failing.</p>
+<pre><code class="hljs language-shell">CashCardApplicationTests &gt; shouldReturnASortedPageOfCashCards() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnACashCardWhenDataIsSaved() PASSED
+...
+CashCardApplicationTests &gt; shouldReturnAllCashCardsWhenListIsRequested() FAILED
+...
+CashCardApplicationTests &gt; shouldReturnASortedPageOfCashCardsWithNoParametersAndUseDefaultValues() FAILED
+...
+</code></pre>
+</li>
+<li><p>Update the Controller&#39;s <code>GET</code> for lists endpoint.</p>
+<p>Edit <code>CashCardController</code> to filter lists by <code>owner</code>.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@GetMapping</span>
+<span class="hljs-keyword">public</span> ResponseEntity&lt;List&lt;CashCard&gt;&gt; <span class="hljs-title function_">findAll</span><span class="hljs-params">(Pageable pageable, Principal principal)</span> {
+    Page&lt;CashCard&gt; page = cashCardRepository.findByOwner(principal.getName(),
+            PageRequest.of(
+                pageable.getPageNumber(),
+                ...
+</code></pre>
+<p>Once again we get the authenticated <code>username</code> from the <code>principal.getName()</code> method.</p>
+</li>
+<li><p>Run the tests.</p>
+<p>They all pass!</p>
+<pre><code class="hljs language-shell">BUILD SUCCESSFUL in 8s
+</code></pre>
+</li>
+</ol>
+</div
