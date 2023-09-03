@@ -276,6 +276,7 @@ CashCardApplicationTests &gt; shouldNotReturnACashCardWhenUsingBadCredentials() 
 
 
 
+
 <div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">7: Support Authorization</h1><div class="rendered-content"><p>As we learned in the accompanying lesson, Spring Security supports many forms of authorization.</p>
 <p>Here we&#39;ll implement Role-Based Access Control (RBAC).</p>
 <p>It is likely that a user service will provide access to many authenticated users, but only &quot;card owners&quot; should be allowed to access Family Cash Cards managed by our application. Let&#39;s make those updates now.</p>
