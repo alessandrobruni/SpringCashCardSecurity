@@ -1,4 +1,70 @@
 # SpringCashCardSecurity
+
+
+
+<div class="max-w-container mx-auto">
+        <div class="xl:grid grid-cols-3 gap-12">
+            <div class="rich-text col-span-2">
+                <h1>Implementing POST</h1>
+
+                                    
+<p>Our REST API can now fetch Cash Cards with a specific ID. In this lesson, you&rsquo;ll add the Create endpoint to the API.</p>
+<p>Four questions we&rsquo;ll need to answer while doing this are:</p>
+<ol><li>Who specifies the ID - the client, or the server?</li>
+<li>In the API Request, how do we represent the object to be created?</li>
+<li>Which HTTP method should we use in the Request?</li>
+<li>What does the API send as a Response?</li>
+</ol><p>Let&rsquo;s start by answering the first question: &ldquo;Who specifies the ID?&rdquo; In reality, this is up to the API creator! REST is not exactly a standard; it&rsquo;s merely a way to use HTTP to perform data operations. REST contains a number of guidelines, many of which we&rsquo;re following in this course.</p>
+<p>Here we&rsquo;ll choose to let the server create the ID. Why? Because it&rsquo;s the simplest solution, and databases are efficient at managing unique IDs. However, for completeness, let&rsquo;s discuss our alternatives:</p>
+<ul><li>We could require the client to provide the ID. This might make sense if there were a pre-existing unique ID, but that&rsquo;s not the case.</li>
+<li>We could allow the client to provide the ID optionally (and create it on the server if the client does not supply it). However, we don&rsquo;t have a requirement to do this, and it would complicate our application. If you think you might want to do this &ldquo;just in case&rdquo;, the <strong>Yagni</strong> article (link in the References section) might dissuade you.</li>
+</ul><p>Before answering the third question, &ldquo;Which HTTP method should be used in the Request?&rdquo;, let&rsquo;s talk about the relevant concept of <strong>idempotence</strong>.</p>
+<h2 id="idempotence-and-http" class="anchored"><a href="#idempotence-and-http" class="anchor" role="button"></a>Idempotence and HTTP</h2>
+<p>An <strong>idempotent</strong> operation is defined as one which, if performed more than once, results in the same outcome. In a REST API, an idempotent operation is one that even if it were to be performed several times, the resulting data on the server would be the same as if it had been performed only once.</p>
+<p>For each method, the HTTP standard specifies whether it is idempotent or not. <code>GET</code>, <code>PUT</code>, and <code>DELETE</code> are idempotent, whereas <code>POST</code> and <code>PATCH</code> are not.</p>
+<p>Since we&rsquo;ve decided that the server will create IDs for every Create operation, the Create operation in our API <strong>is NOT idempotent.</strong> Since the server will create a new ID (on every Create request), if you call Create twice - even with the same content - you&rsquo;ll end up with two different objects with the same content, but with different IDs. That was a mouthful, so to summarize: every Create request will generate a new ID, thus no idempotency.</p>
+<p><img src="https://raw.githubusercontent.com/vmware-tanzu-learning/spring-academy-assets/main/courses/course-spring-brasb-build-a-rest-api/idempotency.jpg" alt="The Controller and Repository Layers"></p>
+<p>This leaves us with the <code>POST</code> and <code>PATCH</code> options. As it turns out, REST permits <code>POST</code> as one of the proper methods to use for Create operations, so we'll use it. We&rsquo;ll revisit <code>PATCH</code> in a later lesson.</p>
+<h2 id="the-post-request-and-response" class="anchored"><a href="#the-post-request-and-response" class="anchor" role="button"></a>The POST Request and Response</h2>
+<p>Now let&rsquo;s talk about the content of the <code>POST</code> Request, and the Response.</p>
+<h3>The Request</h3>
+<p>The <code>POST</code> method allows a Body, so we will use the Body to send a JSON representation of the object:</p>
+<p>Request:</p>
+<ul><li>Method: <code>POST</code></li>
+<li>URI: <code>/cashcards/</code></li>
+<li>Body:<div class="syntax"><pre class="line-numbers"><code>{
+    amount: 123.45
+}
+</code></pre></div>
+</li>
+</ul><p>In contrast, if you recall from a previous lesson, the <code>GET</code> operation includes the ID of the Cash Card in the URI and but <em>not</em> in the request Body.</p>
+<p>So why is there no ID in the Request? Because we decided to allow the server to create the ID. Thus, the data contract for the Read operation <em>is different</em> from that of the Create operation.</p>
+<h3>The Response</h3>
+<p>Now on to the Response. On successful creation, what HTTP Response Status Code should be sent? We could use <code>200 OK</code> (the response that Read returns), but there&rsquo;s a more specific, more accurate code for REST APIs: <code>201 CREATED</code>.</p>
+<p>The fact that <code>CREATED</code> is the name of the code makes it seem intuitively appropriate, but there&rsquo;s another, more technical reason to use it: A response code of <code>200 OK</code> does <em>not</em> answer the question &ldquo;Was there any change to the server data?&rdquo;. By returning the <code>201 CREATED</code> status, the API is specifically communicating that data was added to the data store on the server.</p>
+<p>In a previous lesson you learned that an HTTP Response contains two things: a Status Code, and a Body. But that&rsquo;s not all! A Response also contains <strong>Headers</strong>. Headers have a name and a value. The HTTP standard specifies that the <code>Location</code> header in a <code>201 CREATED</code> response should contain the URI of the created resource. This is handy because it allows the caller to easily fetch the new resource using the GET endpoint (the one we implemented prior).</p>
+<p>Here is the complete Response:</p>
+<p>Response:</p>
+<ul><li>Status Code: <code>201 CREATED</code></li>
+<li>Header: <code>Location=/cashcards/42</code></li>
+</ul><h3>Spring Web Convenience Methods</h3>
+<p>In the accompanying lab, you&rsquo;ll see that Spring Web provides methods which are geared towards the recommended use of HTTP and REST.</p>
+<p>For example, we&rsquo;ll use the <code>ResponseEntity.created(uriOfCashCard)</code> method to create the above response. This method requires you to specify the location, ensures the Location URI is well-formed (by using the <code>URI</code> class), adds the <code>Location</code> header, and sets the Status Code for you. And by doing so, this saves us from using more verbose methods. For example, the following two code snippets are equivalent (as long as
+<code>uriOfCashCard</code> is not <code>null</code>):</p>
+<div class="syntax"><pre class="line-numbers"><code class="language-java">return  ResponseEntity
+        .created(uriOfCashCard)
+        .build();
+</code></pre></div>
+<p>Versus:</p>
+<div class="syntax"><pre class="line-numbers"><code class="language-java">return ResponseEntity
+        .status(HttpStatus.CREATED)
+        .header(HttpHeaders.LOCATION, uriOfCashCard.toASCIIString())
+        .build();
+</code></pre></div>
+<p>Aren&rsquo;t you glad Spring Web provides the <code>.created()</code> convenience method?</p>
+
+
+
 # 1: Understand our Security Requirements
 Who should be allowed to manage any given Cash Card?
 
