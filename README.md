@@ -193,3 +193,158 @@ public class SecurityConfig {
 </ol>
 <p>Our tests do not provide a username and password with our HTTP requests. So let&#39;s do that next.</p>
 </div>
+
+
+
+
+
+
+<div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">6: Testing Basic Authentication</h1><div class="rendered-content"><p>As we learned in the accompanying lesson, there are many ways of providing user authentication and authorization information for a Spring Boot application using Spring Security.</p>
+<p>For our tests, we&#39;ll configure a test-only service that Spring Security will use for these this purpose: an <code>InMemoryUserDetailsManager</code>.</p>
+<p>Similar to how we configured an in-memory database using H2 for testing Spring Data, we&#39;ll configure an in-memory service with test users to test Spring Security.</p>
+<ol>
+<li><p>Configure a test-only <code>UserDetailsService</code>.</p>
+<p>Which username and password should we submit in our test HTTP requests?</p>
+<p>When you reviewed changes to <code>src/test/resources/data.sql</code> you should&#39;ve seen that we set an <code>OWNER</code> value for each <code>CashCard</code> in the database to the username <code>sarah1</code>. For example:</p>
+<pre><code class="hljs language-sql"><span class="hljs-keyword">INSERT</span> <span class="hljs-keyword">INTO</span> CASH_CARD(ID, AMOUNT, OWNER) <span class="hljs-keyword">VALUES</span> (<span class="hljs-number">100</span>, <span class="hljs-number">1.00</span>, <span class="hljs-string">&#x27;sarah1&#x27;</span>);
+</code></pre>
+<p>Let&#39;s provide a test-only <code>UserDetailsService</code> with the user <code>sarah1</code>.</p>
+<p>Add the following Bean to <code>SecurityConfig</code>.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Bean</span>
+<span class="hljs-keyword">public</span> UserDetailsService <span class="hljs-title function_">testOnlyUsers</span><span class="hljs-params">(PasswordEncoder passwordEncoder)</span> {
+ User.<span class="hljs-type">UserBuilder</span> <span class="hljs-variable">users</span> <span class="hljs-operator">=</span> User.builder();
+ <span class="hljs-type">UserDetails</span> <span class="hljs-variable">sarah</span> <span class="hljs-operator">=</span> users
+   .username(<span class="hljs-string">&quot;sarah1&quot;</span>)
+   .password(passwordEncoder.encode(<span class="hljs-string">&quot;abc123&quot;</span>))
+   .roles() <span class="hljs-comment">// No roles for now</span>
+   .build();
+ <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">InMemoryUserDetailsManager</span>(sarah);
+}
+</code></pre>
+<p>This <code>UserDetailsService</code> configuration should be understandable: configure a user named <code>sarah1</code> with password <code>abc123</code>.</p>
+<p>Spring&#39;s IoC container will find the <code>UserDetailsService</code> Bean and Spring Data will use it when needed.</p>
+</li>
+<li><p>Configure Basic Auth in HTTP tests.</p>
+<p>Select one test method that uses <code>restTemplate.getForEntity</code> and update it with basic authentication for <code>sarah1</code>.</p>
+<pre><code class="hljs language-java"><span class="hljs-keyword">void</span> <span class="hljs-title function_">shouldReturnACashCardWhenDataIsSaved</span><span class="hljs-params">()</span> {
+    ResponseEntity&lt;String&gt; response = restTemplate
+            .withBasicAuth(<span class="hljs-string">&quot;sarah1&quot;</span>, <span class="hljs-string">&quot;abc123&quot;</span>) <span class="hljs-comment">// Add this</span>
+            .getForEntity(<span class="hljs-string">&quot;/cashcards/99&quot;</span>, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+    ...
+</code></pre>
+</li>
+<li><p>Run the tests.</p>
+<p>The updated test that provides the basics should now pass!</p>
+<pre><code class="hljs language-shell">...
+CashCardApplicationTests &gt; shouldReturnACashCardWhenDataIsSaved() PASSED
+...
+</code></pre>
+</li>
+<li><p>Update all remaining <code>CashCardApplicationTests</code> tests and rerun tests.</p>
+<p>Now for some tedium: update all remaining <code>restTemplate</code>-based tests to supply <code>.withBasicAuth(&quot;sarah1&quot;, &quot;abc123&quot;)</code> with every HTTP request.</p>
+<p>When finished, rerun the test.</p>
+<pre><code class="hljs language-shell">BUILD SUCCESSFUL in 9s
+</code></pre>
+<p>Everything passes!</p>
+<p>Congratulations, you&#39;ve implemented and tested Basic Auth!</p>
+</li>
+<li><p>Verify Basic Auth with additional tests.</p>
+<p>Now let&#39;s add tests that expect a <code>401 UNAUTHORIZED</code> response when incorrect credentials are submitted using basic authentication.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Test</span>
+<span class="hljs-keyword">void</span> <span class="hljs-title function_">shouldNotReturnACashCardWhenUsingBadCredentials</span><span class="hljs-params">()</span> {
+    ResponseEntity&lt;String&gt; response = restTemplate
+      .withBasicAuth(<span class="hljs-string">&quot;BAD-USER&quot;</span>, <span class="hljs-string">&quot;abc123&quot;</span>)
+      .getForEntity(<span class="hljs-string">&quot;/cashcards/99&quot;</span>, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+
+    response = restTemplate
+      .withBasicAuth(<span class="hljs-string">&quot;sarah1&quot;</span>, <span class="hljs-string">&quot;BAD-PASSWORD&quot;</span>)
+      .getForEntity(<span class="hljs-string">&quot;/cashcards/99&quot;</span>, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+}
+</code></pre>
+<p>This test should pass...</p>
+<pre><code class="hljs language-shell">...
+CashCardApplicationTests &gt; shouldNotReturnACashCardWhenUsingBadCredentials() PASSED
+</code></pre>
+</li>
+</ol>
+<p>Success! Now that we&#39;ve implemented <em>authentication</em>, let&#39;s move on to implement <em>authorization</em> next.</p>
+</div>
+
+
+
+
+<div class="container-fluid main-content"><div class="row"><div class="col-sm-12"><section class="page-content"><h1 class="title">7: Support Authorization</h1><div class="rendered-content"><p>As we learned in the accompanying lesson, Spring Security supports many forms of authorization.</p>
+<p>Here we&#39;ll implement Role-Based Access Control (RBAC).</p>
+<p>It is likely that a user service will provide access to many authenticated users, but only &quot;card owners&quot; should be allowed to access Family Cash Cards managed by our application. Let&#39;s make those updates now.</p>
+<ol>
+<li><p>Add a users and roles to the <code>UserDetailsService</code> Bean.</p>
+<p>To test authorization, we need multiple test users with a variety of roles.</p>
+<p>Update <code>SecurityConfig.testOnlyUsers</code> and add the <code>CARD-OWNER</code> role to <code>sarah1</code>.</p>
+<p>Also, let&#39;s add a new user named &quot;hank-owns-no-cards&quot; with a role of <code>NON-OWNER</code>.</p>
+<pre><code class="hljs language-java">...
+<span class="hljs-meta">@Bean</span>
+<span class="hljs-keyword">public</span> UserDetailsService <span class="hljs-title function_">testOnlyUsers</span><span class="hljs-params">(PasswordEncoder passwordEncoder)</span> {
+  User.<span class="hljs-type">UserBuilder</span> <span class="hljs-variable">users</span> <span class="hljs-operator">=</span> User.builder();
+  <span class="hljs-type">UserDetails</span> <span class="hljs-variable">sarah</span> <span class="hljs-operator">=</span> users
+    .username(<span class="hljs-string">&quot;sarah1&quot;</span>)
+    .password(passwordEncoder.encode(<span class="hljs-string">&quot;abc123&quot;</span>))
+    .roles(<span class="hljs-string">&quot;CARD-OWNER&quot;</span>) <span class="hljs-comment">// new role</span>
+    .build();
+  <span class="hljs-type">UserDetails</span> <span class="hljs-variable">hankOwnsNoCards</span> <span class="hljs-operator">=</span> users
+    .username(<span class="hljs-string">&quot;hank-owns-no-cards&quot;</span>)
+    .password(passwordEncoder.encode(<span class="hljs-string">&quot;qrs456&quot;</span>))
+    .roles(<span class="hljs-string">&quot;NON-OWNER&quot;</span>) <span class="hljs-comment">// new role</span>
+    .build();
+  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-title class_">InMemoryUserDetailsManager</span>(sarah, hankOwnsNoCards);
+}
+</code></pre>
+</li>
+<li><p>Test for Role verification.</p>
+<p>Let&#39;s add a test that will fail at first, but will pass when we fully implement authorization.</p>
+<p>Here we&#39;ll assert that user &quot;hank-owns-no-cards&quot; should not have access to a <code>CashCard</code> since that user is not a <code>CARD-OWNER</code>.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Test</span>
+<span class="hljs-keyword">void</span> <span class="hljs-title function_">shouldRejectUsersWhoAreNotCardOwners</span><span class="hljs-params">()</span> {
+    ResponseEntity&lt;String&gt; response = restTemplate
+      .withBasicAuth(<span class="hljs-string">&quot;hank-owns-no-cards&quot;</span>, <span class="hljs-string">&quot;qrs456&quot;</span>)
+      .getForEntity(<span class="hljs-string">&quot;/cashcards/99&quot;</span>, String.class);
+    assertThat(response.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
+}
+</code></pre>
+<p><strong><em>But wait!</em></strong> <code>CashCard</code> with ID <code>99</code> belongs to <code>sarah1</code>, right? Shouldn&#39;t only <code>sarah1</code> have access to that data regardless of role?</p>
+<p>You&#39;re right! Keep that in mind for later in this lab.</p>
+</li>
+<li><p>Run the tests.</p>
+<p>We see that our new test fails when we run it.</p>
+<pre><code class="hljs language-shell">CashCardApplicationTests &gt; shouldRejectUsersWhoAreNotCardOwners() FAILED
+ org.opentest4j.AssertionFailedError:
+ expected: 403 FORBIDDEN
+  but was: 200 OK
+</code></pre>
+<p>Why was <code>hank-owns-no-cards</code> able to access a <code>CashCard</code> as indicated by the <code>200 OK</code> response?</p>
+<p>Although we have given the test users roles, we are <em>not enforcing</em> role-based security.</p>
+</li>
+<li><p>Enable role-based security.</p>
+<p>Edit <code>SecurityConfig.filterChain</code> to restrict access to only users with the <code>CARD-OWNER</code> role.</p>
+<pre><code class="hljs language-java"><span class="hljs-meta">@Bean</span>
+<span class="hljs-keyword">public</span> SecurityFilterChain <span class="hljs-title function_">filterChain</span><span class="hljs-params">(HttpSecurity http)</span> <span class="hljs-keyword">throws</span> Exception {
+  http.authorizeHttpRequests()
+    .requestMatchers(<span class="hljs-string">&quot;/cashcards/**&quot;</span>)
+    .hasRole(<span class="hljs-string">&quot;CARD-OWNER&quot;</span>) <span class="hljs-comment">// enable RBAC: Replace the .authenticated() code with this line.</span>
+    .and()
+    .csrf().disable()
+    .httpBasic();
+  <span class="hljs-keyword">return</span> http.build();
+}
+</code></pre>
+</li>
+<li><p>Run the tests.</p>
+<p>We see that our tests pass!</p>
+<pre><code class="hljs language-shell">CashCardApplicationTests &gt; shouldRejectUsersWhoAreNotCardOwners() PASSED
+</code></pre>
+</li>
+</ol>
+<p>We&#39;ve now successfully enabled RBAC-based authorization!</p>
+</div>
